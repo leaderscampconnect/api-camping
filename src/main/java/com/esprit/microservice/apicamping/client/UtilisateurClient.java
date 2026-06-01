@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "ap-users")
+@FeignClient(name = "user-service")
 public interface UtilisateurClient {
 
-    @GetMapping("/api/users/getAll")
+    @GetMapping("/api/users")
     List<UtilisateurDto> getAllUsers();
 
     @GetMapping("/api/users/{id}")
