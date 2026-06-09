@@ -68,9 +68,4 @@ public class SiteCampingController {
     public UtilisateurDto getUserFromUsersService(@PathVariable Long id) {
         return iSiteCampingService.getUserFromUsersService(id);
     }
-
-    @PostMapping("/users")
-    public UtilisateurDto createUserFromUsersService(@RequestBody UtilisateurDto dto) {
-        return iSiteCampingService.createUserFromCamping(dto);
-    }
 }

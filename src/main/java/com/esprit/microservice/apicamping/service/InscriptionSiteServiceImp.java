@@ -7,6 +7,8 @@ import com.esprit.microservice.apicamping.entity.InscriptionSite;
 import com.esprit.microservice.apicamping.entity.SiteCamping;
 import com.esprit.microservice.apicamping.entity.StatutDispo;
 import com.esprit.microservice.apicamping.entity.StatutInscription;
+import com.esprit.microservice.apicamping.client.UtilisateurClient;
+import com.esprit.microservice.apicamping.messaging.NotificationPublisher;
 import com.esprit.microservice.apicamping.repository.InscriptionSiteRepository;
 import com.esprit.microservice.apicamping.repository.SiteCampingRepository;
 import lombok.AllArgsConstructor;
@@ -24,6 +26,8 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
     private final BookingEmailTemplateService bookingEmailTemplateService;
     private final InscriptionSiteRepository inscriptionSiteRepository;
     private final SiteCampingRepository siteCampingRepository;
+    private final UtilisateurClient utilisateurClient;
+    private final NotificationPublisher notificationPublisher;
 
     private InscriptionSiteResponse mapToResponse(InscriptionSite inscription) {
         InscriptionSiteResponse response = new InscriptionSiteResponse();
@@ -154,6 +158,14 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
         InscriptionSite updated = inscriptionSiteRepository.save(inscription);
 
         updateSiteStatus(updated.getSiteCamping());
+
+        // --> NEW RABBITMQ EVENT PUBLISHING <--
+        try {
+            UtilisateurDto user = utilisateurClient.getUserById(updated.getUtilisateurId());
+            notificationPublisher.publishBookingConfirmed(updated, user);
+        } catch (Exception e) {
+            System.err.println("Failed to publish RabbitMQ event: " + e.getMessage());
+        }
 
         try {
             byte[] ticketPdf = ticketPdfService.generateTicketPdf(updated);
