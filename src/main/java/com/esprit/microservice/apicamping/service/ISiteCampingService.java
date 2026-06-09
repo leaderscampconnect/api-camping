@@ -26,6 +26,4 @@ public interface ISiteCampingService {
     List<UtilisateurDto> getAllUsersFromUsersService();
 
     UtilisateurDto getUserFromUsersService(Long id);
-
-    UtilisateurDto createUserFromCamping(UtilisateurDto dto);
 }

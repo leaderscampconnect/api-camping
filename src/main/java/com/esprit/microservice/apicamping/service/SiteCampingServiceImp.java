@@ -195,8 +195,4 @@ public class SiteCampingServiceImp implements ISiteCampingService {
     public UtilisateurDto getUserFromUsersService(Long id) {
         return utilisateurClient.getUserById(id);
     }
-
-    public UtilisateurDto createUserFromCamping(UtilisateurDto dto) {
-        return utilisateurClient.addUser(dto);
-    }
 }

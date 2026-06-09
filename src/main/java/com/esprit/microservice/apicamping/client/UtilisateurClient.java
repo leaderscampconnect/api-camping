@@ -13,8 +13,5 @@ public interface UtilisateurClient {
     List<UtilisateurDto> getAllUsers();
 
     @GetMapping("/api/users/{id}")
-    UtilisateurDto getUserById(@PathVariable Long id);
-
-    @PostMapping("/api/users/add")
-    UtilisateurDto addUser(@RequestBody UtilisateurDto utilisateur);
+    UtilisateurDto getUserById(@PathVariable("id") Long id);
 }
