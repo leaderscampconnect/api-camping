@@ -1,7 +1,5 @@
 package com.esprit.microservice.apicamping.service;
 
-import com.esprit.microservice.apicamping.common.BookingEmailTemplateService;
-import com.esprit.microservice.apicamping.common.EmailService;
 import com.esprit.microservice.apicamping.dto.*;
 import com.esprit.microservice.apicamping.entity.InscriptionSite;
 import com.esprit.microservice.apicamping.entity.SiteCamping;
@@ -22,8 +20,6 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
 
     private final InscriptionStripeService inscriptionStripeService;
     private final TicketPdfService ticketPdfService;
-    private final EmailService emailService;
-    private final BookingEmailTemplateService bookingEmailTemplateService;
     private final InscriptionSiteRepository inscriptionSiteRepository;
     private final SiteCampingRepository siteCampingRepository;
     private final UtilisateurClient utilisateurClient;
@@ -159,37 +155,14 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
 
         updateSiteStatus(updated.getSiteCamping());
 
-        // --> NEW RABBITMQ EVENT PUBLISHING <--
         try {
             UtilisateurDto user = utilisateurClient.getUserById(updated.getUtilisateurId());
-            notificationPublisher.publishBookingConfirmed(updated, user);
-        } catch (Exception e) {
-            System.err.println("Failed to publish RabbitMQ event: " + e.getMessage());
-        }
-
-        try {
             byte[] ticketPdf = ticketPdfService.generateTicketPdf(updated);
-
-            String customerHtml = bookingEmailTemplateService.buildCustomerBookingConfirmedEmail(updated);
-            String ownerHtml = bookingEmailTemplateService.buildOwnerBookingAlertEmail(updated);
-
-            emailService.sendHtmlEmail(
-                    updated.getUtilisateurEmail(),
-                    "Your CampConnect booking is confirmed",
-                    customerHtml,
-                    ticketPdf,
-                    "Ticket-" + updated.getIdInscription() + ".pdf"
-            );
-
-            emailService.sendHtmlEmail(
-                    updated.getSiteCamping().getOwnerEmail(),
-                    "New booking for " + updated.getSiteCamping().getNom(),
-                    ownerHtml,
-                    null,
-                    null
-            );
+            
+            notificationPublisher.publishBookingConfirmed(updated, user, ticketPdf);
+            notificationPublisher.publishBookingOwnerAlert(updated, user);
         } catch (Exception e) {
-            System.err.println("Failed to send confirmation emails: " + e.getMessage());
+            System.err.println("Failed to publish RabbitMQ events or generate PDF: " + e.getMessage());
         }
 
         return mapToResponse(updated);
