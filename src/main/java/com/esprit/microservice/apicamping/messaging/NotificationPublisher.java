@@ -16,7 +16,7 @@ public class NotificationPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
-    public void publishBookingConfirmed(InscriptionSite inscription, UtilisateurDto user) {
+    public void publishBookingConfirmed(InscriptionSite inscription, UtilisateurDto user, byte[] ticketPdf) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "booking.confirmed");
         payload.put("bookingId", String.valueOf(inscription.getIdInscription()));
@@ -43,7 +43,36 @@ public class NotificationPublisher {
         payload.put("bookingReference", "BK-" + inscription.getIdInscription());
         payload.put("timestamp", LocalDateTime.now().toString());
 
+        if (ticketPdf != null) {
+            String base64Pdf = java.util.Base64.getEncoder().encodeToString(ticketPdf);
+            System.out.println("Base64 string length: " + base64Pdf.length());
+            payload.put("ticketPdfBase64", base64Pdf);
+            payload.put("ticketPdfName", "Ticket-" + inscription.getIdInscription() + ".pdf");
+        } else {
+            System.out.println("ticketPdf is null!");
+        }
+
         rabbitTemplate.convertAndSend("camping.events", "booking.confirmed", payload);
         System.out.println("Published booking.confirmed event to RabbitMQ for bookingId: " + inscription.getIdInscription());
+    }
+
+    public void publishBookingOwnerAlert(InscriptionSite inscription, UtilisateurDto user) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("eventType", "booking.owner_alert");
+        payload.put("bookingId", String.valueOf(inscription.getIdInscription()));
+        payload.put("userId", String.valueOf(inscription.getUtilisateurId()));
+        payload.put("recipientEmail", inscription.getSiteCamping().getOwnerEmail());
+        payload.put("camperEmail", inscription.getUtilisateurEmail());
+        
+        payload.put("campingName", inscription.getSiteCamping().getNom());
+        payload.put("location", inscription.getSiteCamping().getLocalisation());
+        payload.put("checkInDate", inscription.getDateDebut().toString());
+        payload.put("checkOutDate", inscription.getDateFin().toString());
+        payload.put("guests", String.valueOf(inscription.getNumberOfGuests()));
+        payload.put("bookingReference", "BK-" + inscription.getIdInscription());
+        payload.put("timestamp", LocalDateTime.now().toString());
+
+        rabbitTemplate.convertAndSend("camping.events", "booking.owner_alert", payload);
+        System.out.println("Published booking.owner_alert event to RabbitMQ for bookingId: " + inscription.getIdInscription());
     }
 }
