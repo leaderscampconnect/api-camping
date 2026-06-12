@@ -15,6 +15,6 @@ public interface NotificationClient {
     @GetMapping("/api/notifications")
     NotificationPageDto getUserNotifications();
 
-    @org.springframework.web.bind.annotation.PostMapping("/api/notifications")
+    @org.springframework.web.bind.annotation.PostMapping("/notifications/v2/camping")
     com.esprit.microservice.apicamping.dto.NotificationDto createNotification(@org.springframework.web.bind.annotation.RequestBody com.esprit.microservice.apicamping.dto.NotificationDto request);
 }

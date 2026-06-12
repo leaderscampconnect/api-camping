@@ -181,7 +181,7 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
                 // Camper Notification via Feign
                 NotificationDto camperNotif = new NotificationDto();
                 camperNotif.setRecipientId(camperKeycloakId);
-                camperNotif.setEventId(updated.getIdInscription().toString());
+                camperNotif.setCampId(updated.getSiteCamping().getIdSite().toString());
                 camperNotif.setType("BOOKING_CONFIRMED");
                 camperNotif.setTitle("Booking Confirmed: " + updated.getSiteCamping().getNom());
                 camperNotif.setMessage("Your booking for " + updated.getSiteCamping().getNom() + " from " + updated.getDateDebut() + " to " + updated.getDateFin() + " has been confirmed.");
@@ -191,7 +191,7 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
                 if (updated.getSiteCamping().getOwnerId() != null) {
                     NotificationDto ownerNotif = new NotificationDto();
                     ownerNotif.setRecipientId(updated.getSiteCamping().getOwnerId().toString());
-                    ownerNotif.setEventId(updated.getIdInscription().toString());
+                    ownerNotif.setCampId(updated.getSiteCamping().getIdSite().toString());
                     ownerNotif.setType("BOOKING_RECEIVED");
                     ownerNotif.setTitle("New Booking: " + updated.getSiteCamping().getNom());
                     ownerNotif.setMessage("You have a new booking for " + updated.getSiteCamping().getNom() + " from " + camperFirstName + " " + camperLastName + ".");
