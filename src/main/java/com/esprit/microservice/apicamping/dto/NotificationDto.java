@@ -7,7 +7,7 @@ public class NotificationDto {
     private String id;
     
     private String recipientId;
-    private String eventId;
+    private String campId;
     
     @com.fasterxml.jackson.annotation.JsonProperty("eventType")
     private String type;
@@ -31,8 +31,8 @@ public class NotificationDto {
     public String getRecipientId() { return recipientId; }
     public void setRecipientId(String recipientId) { this.recipientId = recipientId; }
 
-    public String getEventId() { return eventId; }
-    public void setEventId(String eventId) { this.eventId = eventId; }
+    public String getCampId() { return campId; }
+    public void setCampId(String campId) { this.campId = campId; }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
