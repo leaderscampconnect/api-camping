@@ -24,6 +24,7 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
     private final SiteCampingRepository siteCampingRepository;
     private final UtilisateurClient utilisateurClient;
     private final NotificationPublisher notificationPublisher;
+    private final com.esprit.microservice.apicamping.client.NotificationClient notificationClient;
 
     private InscriptionSiteResponse mapToResponse(InscriptionSite inscription) {
         InscriptionSiteResponse response = new InscriptionSiteResponse();
@@ -161,6 +162,31 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
             
             notificationPublisher.publishBookingConfirmed(updated, user, ticketPdf);
             notificationPublisher.publishBookingOwnerAlert(updated, user);
+
+            try {
+                // Camper Notification via Feign
+                NotificationDto camperNotif = new NotificationDto();
+                camperNotif.setRecipientId(user.getId());
+                camperNotif.setEventId(updated.getIdInscription().toString());
+                camperNotif.setType("BOOKING_CONFIRMED");
+                camperNotif.setTitle("Booking Confirmed: " + updated.getSiteCamping().getNom());
+                camperNotif.setMessage("Your booking for " + updated.getSiteCamping().getNom() + " from " + updated.getDateDebut() + " to " + updated.getDateFin() + " has been confirmed.");
+                notificationClient.createNotification(camperNotif);
+
+                // Owner Notification via Feign
+                if (updated.getSiteCamping().getOwnerId() != null) {
+                    NotificationDto ownerNotif = new NotificationDto();
+                    ownerNotif.setRecipientId(updated.getSiteCamping().getOwnerId().toString());
+                    ownerNotif.setEventId(updated.getIdInscription().toString());
+                    ownerNotif.setType("BOOKING_RECEIVED");
+                    ownerNotif.setTitle("New Booking: " + updated.getSiteCamping().getNom());
+                    ownerNotif.setMessage("You have a new booking for " + updated.getSiteCamping().getNom() + " from " + user.getFirstName() + " " + user.getLastName() + ".");
+                    notificationClient.createNotification(ownerNotif);
+                }
+            } catch (Exception feignEx) {
+                System.err.println("Failed to create OpenFeign notifications: " + feignEx.getMessage());
+            }
+
         } catch (Exception e) {
             System.err.println("Failed to publish RabbitMQ events or generate PDF: " + e.getMessage());
         }
@@ -247,10 +273,6 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
 
         if (inscription.getStatut() == StatutInscription.CANCELLED) {
             return mapToResponse(inscription);
-        }
-
-        if (inscription.getStatut() == StatutInscription.CONFIRMED) {
-            throw new RuntimeException("Confirmed inscription cannot be cancelled from Stripe cancel flow");
         }
 
         inscription.setStatut(StatutInscription.CANCELLED);
