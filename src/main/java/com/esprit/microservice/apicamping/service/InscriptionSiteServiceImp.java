@@ -157,16 +157,31 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
         updateSiteStatus(updated.getSiteCamping());
 
         try {
-            UtilisateurDto user = utilisateurClient.getUserById(updated.getUtilisateurId());
+            // Extract Camper user data from Keycloak JWT instead of UserService
+            org.springframework.security.oauth2.jwt.Jwt jwt = (org.springframework.security.oauth2.jwt.Jwt) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String camperKeycloakId = jwt.getSubject();
+            String camperFirstName = jwt.getClaimAsString("given_name");
+            String camperLastName = jwt.getClaimAsString("family_name");
+            
+            if (camperFirstName == null) camperFirstName = "Camper";
+            if (camperLastName == null) camperLastName = "";
+
             byte[] ticketPdf = ticketPdfService.generateTicketPdf(updated);
             
-            notificationPublisher.publishBookingConfirmed(updated, user, ticketPdf);
-            notificationPublisher.publishBookingOwnerAlert(updated, user);
+            // Note: We create a dummy UtilisateurDto to satisfy NotificationPublisher for now.
+            // In a full refactoring, NotificationPublisher should be updated to not rely on UtilisateurDto.
+            UtilisateurDto camperDto = new UtilisateurDto();
+            camperDto.setPrenom(camperFirstName);
+            camperDto.setNom(camperLastName);
+            camperDto.setEmail(updated.getUtilisateurEmail());
+
+            notificationPublisher.publishBookingConfirmed(updated, camperDto, ticketPdf);
+            notificationPublisher.publishBookingOwnerAlert(updated, camperDto);
 
             try {
                 // Camper Notification via Feign
                 NotificationDto camperNotif = new NotificationDto();
-                camperNotif.setRecipientId(user.getId());
+                camperNotif.setRecipientId(camperKeycloakId);
                 camperNotif.setEventId(updated.getIdInscription().toString());
                 camperNotif.setType("BOOKING_CONFIRMED");
                 camperNotif.setTitle("Booking Confirmed: " + updated.getSiteCamping().getNom());
@@ -180,7 +195,7 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
                     ownerNotif.setEventId(updated.getIdInscription().toString());
                     ownerNotif.setType("BOOKING_RECEIVED");
                     ownerNotif.setTitle("New Booking: " + updated.getSiteCamping().getNom());
-                    ownerNotif.setMessage("You have a new booking for " + updated.getSiteCamping().getNom() + " from " + user.getFirstName() + " " + user.getLastName() + ".");
+                    ownerNotif.setMessage("You have a new booking for " + updated.getSiteCamping().getNom() + " from " + camperFirstName + " " + camperLastName + ".");
                     notificationClient.createNotification(ownerNotif);
                 }
             } catch (Exception feignEx) {
