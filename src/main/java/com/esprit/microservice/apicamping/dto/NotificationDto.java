@@ -9,10 +9,10 @@ public class NotificationDto {
     private String recipientId;
     private String campId;
     
-    @com.fasterxml.jackson.annotation.JsonProperty("eventType")
+    @com.fasterxml.jackson.annotation.JsonProperty("type")
     private String type;
     
-    @com.fasterxml.jackson.annotation.JsonProperty("subject")
+    @com.fasterxml.jackson.annotation.JsonProperty("title")
     private String title;
     
     // Fallback if the body is not provided

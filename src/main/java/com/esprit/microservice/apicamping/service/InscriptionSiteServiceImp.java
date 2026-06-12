@@ -190,7 +190,7 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
                 // Owner Notification via Feign
                 if (updated.getSiteCamping().getOwnerId() != null) {
                     NotificationDto ownerNotif = new NotificationDto();
-                    ownerNotif.setRecipientId(updated.getSiteCamping().getOwnerId().toString());
+                    ownerNotif.setRecipientId(updated.getSiteCamping().getOwnerEmail());
                     ownerNotif.setCampId(updated.getSiteCamping().getIdSite().toString());
                     ownerNotif.setType("BOOKING_RECEIVED");
                     ownerNotif.setTitle("New Booking: " + updated.getSiteCamping().getNom());
