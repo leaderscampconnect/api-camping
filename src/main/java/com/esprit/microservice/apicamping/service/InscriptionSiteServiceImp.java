@@ -22,7 +22,6 @@ public class InscriptionSiteServiceImp implements IInscriptionSiteService {
     private final TicketPdfService ticketPdfService;
     private final InscriptionSiteRepository inscriptionSiteRepository;
     private final SiteCampingRepository siteCampingRepository;
-    private final UtilisateurClient utilisateurClient;
     private final NotificationPublisher notificationPublisher;
     private final com.esprit.microservice.apicamping.client.NotificationClient notificationClient;
 
